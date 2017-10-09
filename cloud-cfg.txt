@@ -4,14 +4,12 @@ apt_sources:
  - source: "ppa:fenics-packages/fenics"
 packages:
  - python3-pip
- - fenics
  - gmsh
 
 locale: en_US.UTF-8
 
 runcmd:
- - pip3 install numpy celery
- - git clone https://github.com/harpaj/acc14.git && cd acc14
- - cd bin/cloudnaca && ./runme.sh 0 30 10 200 3 && cd ../..
- - dolfin-convert -i gmsh -o xml results/msh/r0a0n200.msh results/xml/r0a0n200.xml
- - cd bin/airfoil && ./airfoil 10 0.0001 10. 1 ../../results/xml/r0a0n200.xml && cd ../..
+ - apt --assume-yes install --no-install-recommends fenics
+ - pip3 install numpy celery flask
+ - cd /home/ubuntu
+ - sudo -u ubuntu git clone https://github.com/harpaj/acc14.git && cd acc14
