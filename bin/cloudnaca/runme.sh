@@ -19,9 +19,9 @@
 # Path to GMSH binary
 GMSHBIN="/usr/bin/gmsh"
 # Path to dir where geo files will be stored
-GEODIR="geo"
+GEODIR="../results/geo"
 # Path to dir where msh files will be stored
-MSHDIR="msh"
+MSHDIR="../results/msh"
 # NACA four digit airfoil (typically NACA0012)
 NACA1=0
 NACA2=0
@@ -51,7 +51,7 @@ if [ "$n_levels" -gt "0" ]; then
     pm=r$(($i-1))a;
     pmn=r$(($i))a;
     for j in `ls $MSHDIR|grep ^$pm`; do
-      newname="$(echo $j|sed -e s/"$pm"/"$pmn"/)"; 
+      newname="$(echo $j|sed -e s/"$pm"/"$pmn"/)";
       cp $MSHDIR/$j $MSHDIR/$newname;
       $GMSHBIN -refine -v 0 $MSHDIR/$newname;
     done
