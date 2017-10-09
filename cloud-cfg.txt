@@ -2,8 +2,6 @@
 
 apt_sources:
  - source: "ppa:fenics-packages/fenics"
-apt_update: true
-apt_upgrade: true
 packages:
  - python3-pip
  - fenics
@@ -13,7 +11,7 @@ locale: en_US.UTF-8
 
 runcmd:
  - pip3 install numpy celery
- - git clone git@github.com:harpaj/acc14.git && cd acc14
+ - git clone https://github.com/harpaj/acc14.git && cd acc14
  - cd cloudnaca && ./runme.sh 0 30 10 200 3 && cd ..
  - dolfin-convert -i gmsh -o xml results/msh/r0a0n200.msh results/msh/r0a0n200.xml
  - cd airfoil && ./airfoil 10 0.0001 10. 1 ../results/xml/r0a0n200.xml && cd ..
