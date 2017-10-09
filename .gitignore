@@ -1,6 +1,6 @@
 # Custom stuff
 results/
-
+bin/airfoil/results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
