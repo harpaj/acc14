@@ -3,8 +3,8 @@ import subprocess
 
 celery = Celery(
     'tasks',
-    broker='pyamqp://myuser:mypassword@localhost:5672/myvhost',
-    backend='rpc://myuser:mypassword@localhost:5672/myvhost'
+    broker='pyamqp://myuser:mypassword@192.168.1.47:5672/myvhost',
+    backend='rpc://myuser:mypassword@192.168.1.47:5672/myvhost'
 )
 celery.conf.task_serializer = 'json'
 celery.conf.task_compression = 'gzip'
