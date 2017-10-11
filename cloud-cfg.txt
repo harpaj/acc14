@@ -13,3 +13,4 @@ runcmd:
  - pip3 install numpy celery flask
  - cd /home/ubuntu
  - sudo -u ubuntu git clone https://github.com/harpaj/acc14.git && cd acc14
+ - sudo -u ubuntu celery -A tasks.celery worker --loglevel=INFO &
