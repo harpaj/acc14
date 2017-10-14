@@ -1,0 +1,126 @@
+heat_template_version: 2016-10-14
+
+description: Airfoil Project Stack G14 (Resource Group)
+
+parameters:
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for compute instance
+    default: Ubuntu 16.04 LTS (Xenial Xerus) - latest
+
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used
+    default: ssc.small
+
+  key:
+    type: string
+    label: Key name
+    description: Name of key-pair to be used for compute instance
+    default: airfoil_kp_g14_c3se
+
+  public_network:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: Public External IPv4 Network
+
+  internal_network:
+    type: string
+    label: Internal network name or ID
+    description: Private network with local IP addresses.
+    default: SNIC 2017/13-45 Internal IPv4 Network
+
+  prod_lip:
+    type: string
+    default: localhost
+
+  workers:
+    type: string
+    default: 1
+
+  sec_group_name:
+    type: string
+    default: airfoil_sg_g14
+
+resources:
+
+  airfoil_sg_g14:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { get_param: sec_group_name }
+      rules:
+        - protocol: icmp
+        - protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+        - protocol: tcp
+          port_range_min: 5000
+          port_range_max: 5000
+        - protocol: tcp
+          port_range_min: 5555
+          port_range_max: 5555
+        - protocol: tcp
+          port_range_min: 5672
+          port_range_max: 5672
+        - protocol: tcp
+          port_range_min: 15672
+          port_range_max: 15672
+
+  airfoil_client_g14:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      networks:
+        - network: { get_param: internal_network }
+      security_groups: [ { get_resource: airfoil_sg_g14 } ]
+      user_data:
+        str_replace:
+          template: { get_file: client_g14.txt }
+          params:
+           $LIP: { get_param: prod_lip }
+      user_data_format: RAW
+
+  airfoil_client_fip_g14:
+    type: OS::Nova::FloatingIP
+    properties:
+      pool: { get_param: public_network }
+
+  airfoil_client_fipa_g14:
+    type: OS::Nova::FloatingIPAssociation
+    properties:
+      floating_ip: { get_resource: airfoil_client_fip_g14 }
+      server_id: { get_resource: airfoil_client_g14 }
+
+  airfoil_gw_g14:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: workers }
+      resource_def:
+        type: worker_rg_g14.yaml
+        properties:
+          image: { get_param: image }
+          flavor: { get_param: flavor }
+          key: { get_param: key }
+          public_network: { get_param: public_network }
+          internal_network: { get_param: internal_network }
+          key: { get_param: key }
+          prod_lip: { get_attr: [ airfoil_client_g14, first_address ] }
+          sec_group_name: { get_param: sec_group_name }
+
+outputs:
+  instance_name:
+    description: Name of the instance
+    value: { get_attr: [airfoil_client_g14, name] }
+
+  instance_ip:
+    description: IP address of the instance
+    value: { get_attr: [airfoil_client_g14, first_address, airfoil_client_fip_g14, floating_ip_address] }

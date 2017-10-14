@@ -1,0 +1,71 @@
+heat_template_version: 2016-10-14
+
+description: Airfoil Project Workers Group
+
+parameters:
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for compute instance
+    default: Ubuntu 16.04 LTS (Xenial Xerus) - latest
+
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used
+    default: ssc.small
+
+  key:
+    type: string
+    label: Key name
+    description: Name of key-pair to be used for compute instance
+    default: accaod
+
+  public_network:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: Public External IPv4 Network
+
+  internal_network:
+    type: string
+    label: Internal network name or ID
+    description: Private network with local IP addresses.
+    default: SNIC 2017/13-45 Internal IPv4 Network
+
+  prod_lip:
+    type: string
+    default: localhost
+    
+  sec_group_name:
+    type: string
+    default: airfoil_sg_g14
+
+resources:
+  airfoil_worker_g14:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      networks:
+        - network: { get_param: internal_network }
+      security_groups: [ { get_param: sec_group_name } ]
+      user_data:
+        str_replace:
+          template: { get_file: worker_g14.txt }
+          params:
+           $LIP: { get_param: prod_lip }
+      user_data_format: RAW
+
+  airfoil_worker_fip_g14:
+    type: OS::Nova::FloatingIP
+    properties:
+      pool: { get_param: public_network }
+
+  airfoil_worker_fipa_g14:
+    type: OS::Nova::FloatingIPAssociation
+    properties:
+      floating_ip: { get_resource: airfoil_worker_fip_g14 }
+      server_id: { get_resource: airfoil_worker_g14 }

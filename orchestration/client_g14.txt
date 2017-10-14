@@ -1,0 +1,142 @@
+#cloud-config
+
+apt_sources:
+ - source: "ppa:fenics-packages/fenics"
+ 
+packages:
+ - python3-pip
+ - gmsh
+ - rabbitmq-server
+
+locale: en_US.UTF-8
+
+write_files:
+ - path: /home/ubuntu/proj/tasks.py
+   content: |
+     from celery import Celery
+     import subprocess
+     celery = Celery(
+         'tasks',
+         broker='pyamqp://myuser:mypassword@$LIP:5672/myvhost',
+         backend='rpc://myuser:mypassword@$LIP:5672/myvhost'
+     )
+     celery.conf.task_serializer = 'json'
+     celery.conf.task_compression = 'gzip'
+     @celery.task()
+     def one_angle(
+         angle, naca1, naca2, naca3, naca4, nodes, refinements,
+         samples, viscosity, speed, time
+     ):
+         filename = angle + '_' + nodes + '_' + naca1 + naca2 + naca3 + naca4 + '.geo'
+         # create geo file
+         with open("results/geo/" + filename, 'w') as geo_fh:
+             subprocess.run(
+                 [
+                     "/home/ubuntu/acc14/bin/cloudnaca/naca2gmsh_geo.py",
+                     angle, naca1, naca2, naca3, naca4, nodes
+                 ],
+                 stdout=geo_fh
+             )
+         # create mesh file
+         msh_name = filename[:-3] + "msh"
+         subprocess.run([
+             "gmsh", "-v", '0', '-nopopup', '-2', '-o', "results/msh/"+msh_name, "results/geo/"+filename
+         ])
+         # refine mesh file
+         for _ in range(int(refinements)):
+             subprocess.run(["gmsh", "-refine", "-v", "0", "results/msh/"+msh_name])
+         # convert mesh file to xml
+         xml_name = filename[:-3] + "xml"
+         subprocess.run([
+             "dolfin-convert", "-i", "gmsh", "-o", "xml",
+             "results/msh/" + msh_name, "results/xml/" + xml_name
+         ])
+         # run airfoil on xml file
+         subprocess.run(
+             [
+                 "/home/ubuntu/acc14/bin/airfoil/airfoil",
+                 samples, viscosity, speed, time, "../../results/xml/" + xml_name
+             ],
+             cwd="/home/ubuntu/acc14/bin/airfoil"
+         )
+         # read in and return result
+         with open("/home/ubuntu/acc14/bin/airfoil/results/drag_ligt.m") as f:
+             lines = f.read().splitlines()
+         return lines
+ - path: /home/ubuntu/proj/app.py
+   content: |
+     from flask import Flask, jsonify, request
+     import time
+     from tasks import one_angle
+     app = Flask(__name__)
+     @app.route('/run')
+     def schedule_run():
+         start_time = time.time()
+         args = request.args
+         try:
+             from_angle = int(args.get('from_angle'))
+             to_angle = int(args.get('to_angle'))
+             step_size = int(args.get('step_size'))
+             naca = args.get('naca', '0012')
+             assert len(naca) == 4
+             nodes = args.get('nodes', '200')
+             int(nodes)
+             refinements = args.get('refinements', '0')
+             assert 0 <= int(refinements) <= 2
+             samples = args.get('samples', '10')
+             int(samples)
+             viscosity = args.get('viscosity', '0.0001')
+             float(viscosity)
+             speed = args.get('speed', '10.')
+             float(speed)
+             total_time = args.get('total_time', '1')
+             int(total_time)
+         except (TypeError, ValueError, AssertionError) as e:
+             return jsonify({
+                 "message": "You delivered invalid parameters.",
+                 "required_parameters": {
+                     "from_angle": {"type": "int"},
+                     "to_angle": {"type": "int"},
+                     "step_size": {"type": "int"}
+                 },
+                 "optional parameters": {
+                     "naca": {"type": "char[4]", "default": "0012"},
+                     "nodes": {"type": "int", "default": "20"},
+                     "refinements": {"type": "[0, 1, 2]", "default": "0"},
+                     "samples": {"type": "int", "default": "10"},
+                     "viscosity": {"type": "float", "default": "0.0001"},
+                     "speed": {"type": "float", "default": "10."},
+                     "total_time": {"type": "int", "default": "1"}
+                 },
+                 "python_error": str(e)
+             })
+         for angle in range(from_angle, to_angle+1, step_size):
+             task = one_angle.delay(
+                 str(angle), *naca, nodes, refinements, samples, viscosity, speed, total_time)
+             break
+         result = task.get()
+         response = {
+             "result": result,
+             "duration": time.time() - start_time,
+         }
+         return jsonify(response)
+     if __name__ == '__main__':
+         app.run(host='0.0.0.0', debug=True)
+
+runcmd:
+ - apt --assume-yes install --no-install-recommends fenics
+ - pip3 install numpy celery flask flower
+ - rabbitmqctl add_user myuser mypassword
+ - rabbitmqctl add_vhost myvhost
+ - rabbitmqctl set_user_tags myuser mytag
+ - rabbitmqctl set_permissions -p myvhost myuser ".*" ".*" ".*"
+ - rabbitmq-plugins enable rabbitmq_management
+ - rabbitmqctl add_user monitor monitor
+ - rabbitmqctl set_user_tags monitor administrator
+ - rabbitmqctl set_permissions -p monitor ".*" ".*" ".*"
+ - celery flower --broker=amqp://myuser:mypassword@$LIP/myvhost &
+ - cd /home/ubuntu
+ - sudo -u ubuntu git clone https://github.com/harpaj/acc14.git
+ - cd /home/ubuntu/proj
+ - celery -A tasks.celery worker --loglevel=INFO &
+ - python3 app.py &

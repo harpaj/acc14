@@ -1,0 +1,2 @@
+resource_registry:
+  "OS::Nova::Server::Worker": "worker_rg_g14.yaml"
