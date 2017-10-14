@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from celery.result import ResultSet
 import time
 from tasks import one_angle
 
@@ -47,14 +48,15 @@ def schedule_run():
             "python_error": str(e)
         })
 
+    tasks = []
     for angle in range(from_angle, to_angle+1, step_size):
-        task = one_angle.delay(
-            str(angle), *naca, nodes, refinements, samples, viscosity, speed, total_time)
-        break
+        tasks.append(one_angle.delay(
+            str(angle), *naca, nodes, refinements, samples, viscosity, speed, total_time))
 
-    result = task.get()
+    results = ResultSet(tasks).join_native()
+
     response = {
-        "result": result,
+        "result": dict(results),
         "duration": time.time() - start_time,
     }
     return jsonify(response)

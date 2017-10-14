@@ -61,8 +61,6 @@ def one_angle(
     with open("/home/ubuntu/acc14/bin/airfoil/results/" + result_name) as f:
         reader = DictReader(f)
         for row in reader:
-            row['time'] = row.pop("% time")
             result.append(row)
-        lines = f.read().splitlines()
 
-    return lines
+    return angle, result
