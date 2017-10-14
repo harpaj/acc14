@@ -54,7 +54,7 @@ def one_angle(
         cwd="/home/ubuntu/acc14/bin/airfoil"
     )
 
-    result_name = '_'.join([filename[:-3], samples, viscosity, speed, time, 'drag_ligt.m'])
+    result_name = '_'.join([filename[:-4], samples, viscosity, speed, time, 'drag_ligt.m'])
 
     # read in and return result
     result = []
