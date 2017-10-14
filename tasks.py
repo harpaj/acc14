@@ -1,10 +1,11 @@
 from celery import Celery
+from csv import DictReader
 import subprocess
 
 celery = Celery(
     'tasks',
-    broker='pyamqp://myuser:mypassword@192.168.1.47:5672/myvhost',
-    backend='rpc://myuser:mypassword@192.168.1.47:5672/myvhost'
+    broker='pyamqp://myuser:mypassword@192.168.1.41:5672/myvhost',
+    backend='rpc://myuser:mypassword@192.168.1.41:5672/myvhost'
 )
 celery.conf.task_serializer = 'json'
 celery.conf.task_compression = 'gzip'
@@ -53,8 +54,15 @@ def one_angle(
         cwd="/home/ubuntu/acc14/bin/airfoil"
     )
 
+    result_name = '_'.join([filename[:-3], samples, viscosity, speed, time, 'drag_ligt.m'])
+
     # read in and return result
-    with open("/home/ubuntu/acc14/bin/airfoil/results/drag_ligt.m") as f:
+    result = []
+    with open("/home/ubuntu/acc14/bin/airfoil/results/" + result_name) as f:
+        reader = DictReader(f)
+        for row in reader:
+            row['time'] = row.pop("% time")
+            result.append(row)
         lines = f.read().splitlines()
 
     return lines
