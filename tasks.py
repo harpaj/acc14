@@ -59,7 +59,7 @@ def one_angle(
     # read in and return result
     result = []
     with open("/home/ubuntu/acc14/bin/airfoil/results/" + result_name) as f:
-        reader = DictReader(f)
+        reader = DictReader(f, delimiter='\t')
         for row in reader:
             result.append(row)
 
