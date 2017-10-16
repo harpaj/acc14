@@ -36,14 +36,17 @@ parameters:
 
   prod_lip:
     type: string
+    description: Local ip address hosting the RabbitMQ broker and the Celery result backend (do not change).
     default: localhost
 
   workers:
     type: string
+    description: Number of celery worker nodes to be deployed.
     default: 1
 
   sec_group_name:
     type: string
+    description: Assigned name for the security group.
     default: airfoil_sg_g14
 
 resources:

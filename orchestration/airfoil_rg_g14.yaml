@@ -7,19 +7,19 @@ parameters:
   image:
     type: string
     label: Image name or ID
-    description: Image to be used for compute instance
+    description: Image to be used for compute instance.
     default: Ubuntu 16.04 LTS (Xenial Xerus) - latest
 
   flavor:
     type: string
     label: Flavor
-    description: Type of instance (flavor) to be used
+    description: Type of instance (flavor) to be used.
     default: ssc.small
 
   key:
     type: string
     label: Key name
-    description: Name of key-pair to be used for compute instance
+    description: Name of key-pair to be used for compute instance.
     default: airfoil_kp_g14_c3se
 
   public_network:
@@ -36,14 +36,17 @@ parameters:
 
   prod_lip:
     type: string
+    description: Local ip address hosting the RabbitMQ broker and the Celery result backend (do not change).
     default: localhost
 
   workers:
     type: string
+    description: Number of celery worker nodes to be deployed.
     default: 1
 
   sec_group_name:
     type: string
+    description: Assigned name for the security group.
     default: airfoil_sg_g14
 
 resources:
