@@ -21,9 +21,9 @@ You could also change the default values for any of the following parameters inc
 - flavor: Type of instance (flavor) to be used
 - key: Name of key-pair to be used for compute instance
 - public_network: Public network with floating IP addresses
-- internal_network: SNIC 2017/13-45 Internal IPv4 Network
-- workers: Number of celery worker nodes to be deployed.
-- sec_group_name: Assigned name for the security group.
+- internal_network: Private network with local IP addresses
+- workers: Number of celery worker nodes to be deployed
+- sec_group_name: Assigned name for the security group
 
 ## Task Monitoring
 To monitor task execution using celery flower visit:
