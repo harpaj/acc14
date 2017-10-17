@@ -23,5 +23,5 @@ runcmd:
  - rabbitmqctl set_permissions -p monitor ".*" ".*" ".*"
  - sudo -u ubuntu celery flower --broker=amqp://myuser:mypassword@localhost:5672/myvhost &
  - cd /home/ubuntu
- - sudo -u ubuntu git clone https://github.com/harpaj/acc14.git
+ - sudo -u ubuntu git clone https://github.com/harpaj/acc14.git && cd acc14
  - sudo -u ubuntu python3 app.py &
