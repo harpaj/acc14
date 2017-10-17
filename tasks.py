@@ -2,11 +2,8 @@ from celery import Celery
 from csv import DictReader
 import subprocess
 
-celery = Celery(
-    'tasks',
-    broker='pyamqp://myuser:mypassword@192.168.1.41:5672/myvhost',
-    backend='rpc://myuser:mypassword@192.168.1.41:5672/myvhost'
-)
+celery = Celery('tasks')
+celery.config_from_object('celeryconfig')
 celery.conf.task_serializer = 'json'
 celery.conf.task_compression = 'gzip'
 
