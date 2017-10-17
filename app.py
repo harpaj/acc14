@@ -1,14 +1,20 @@
 from flask import Flask, jsonify, request
 from celery.result import ResultSet
 import time
+import os
+import json
 from tasks import one_angle
 
 app = Flask(__name__)
+
+RESULT_DIR = "results"
 
 
 @app.route('/run')
 def schedule_run():
     start_time = time.time()
+
+    # check and store parameters
     args = request.args
     try:
         from_angle = int(args.get('from_angle'))
@@ -48,15 +54,32 @@ def schedule_run():
             "python_error": str(e)
         })
 
+    # load filenames of all currently stored results
+    stored_results = set([f.name for f in os.scandir(RESULT_DIR) if f.is_file()])
+
+    # for each angle, load results from file or schedule task
+    filename = '_'.join([naca, nodes, refinements, samples, viscosity, speed, total_time])
+    results = []
     tasks = []
     for angle in range(from_angle, to_angle+1, step_size):
-        tasks.append(one_angle.delay(
-            str(angle), *naca, nodes, refinements, samples, viscosity, speed, total_time))
+        angle = str(angle)
+        _filename = angle + "_" + filename + ".json"
+        if _filename not in stored_results:
+            tasks.append(one_angle.delay(
+                angle, *naca, nodes, refinements, samples, viscosity, speed, total_time))
+        else:
+            with open(os.path.join(RESULT_DIR, _filename), 'r') as fh:
+                results.append((angle, json.load(fh)))
 
-    results = ResultSet(tasks).join_native()
+    # get results from tasks, store them
+    new_results = ResultSet(tasks).join_native()
+    for angle, res in new_results:
+        _filename = angle + "_" + filename + ".json"
+        with open(os.path.join(RESULT_DIR, _filename), 'w') as fh:
+            json.dump(res, fh)
 
     response = {
-        "result": dict(results),
+        "result": dict(results + new_results),
         "duration": time.time() - start_time,
     }
     return jsonify(response)
