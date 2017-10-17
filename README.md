@@ -13,7 +13,7 @@ This folder contains the following YAML scripts for the application deployment u
 - environment.yaml: Celery worker resource registration
 
 ## Deployment Instructions
-- Using resource group: openstack stack create -t airfoil_stack_g14.yaml airfoil_stack_g14
+- Using resource group: openstack stack create -t airfoil_rg_g14.yaml airfoil_stack_g14
 - Using auto-scaling group: openstack stack create -t airfoil_asg_g14.yaml -e environment.yaml airfoil_asg_g14
 
 You could also change the default values for any of the following parameters including --parameter "ParamName=ParamValue"
