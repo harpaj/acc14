@@ -1,17 +1,13 @@
 #cloud-config
 
-apt_sources:
- - source: "ppa:fenics-packages/fenics"
 
 packages:
  - python3-pip
- - gmsh
  - rabbitmq-server
 
 locale: en_US.UTF-8
 
 runcmd:
- - apt --assume-yes install --no-install-recommends fenics
  - pip3 install numpy celery flask flower
  - rabbitmqctl add_user myuser mypassword
  - rabbitmqctl add_vhost myvhost
