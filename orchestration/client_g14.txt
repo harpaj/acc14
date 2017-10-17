@@ -20,5 +20,4 @@ runcmd:
  - sudo -u ubuntu celery flower --broker=amqp://myuser:mypassword@localhost:5672/myvhost &
  - cd /home/ubuntu
  - sudo -u ubuntu git clone https://github.com/harpaj/acc14.git && cd acc14
- - sudo -u ubuntu celery -A tasks.celery worker --loglevel=INFO &
  - sudo -u ubuntu python3 app.py &
