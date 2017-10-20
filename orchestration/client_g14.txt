@@ -11,7 +11,7 @@ runcmd:
  - pip3 install numpy celery flask flower
  - rabbitmqctl add_user myuser mypassword
  - rabbitmqctl add_vhost myvhost
- - rabbitmqctl set_user_tags myuser mytag
+ - rabbitmqctl set_user_tags myuser administrator
  - rabbitmqctl set_permissions -p myvhost myuser ".*" ".*" ".*"
  - rabbitmq-plugins enable rabbitmq_management
  - rabbitmqctl add_user monitor monitor
