@@ -20,7 +20,7 @@ parameters:
     type: string
     label: Key name
     description: Name of key-pair to be used for compute instance
-    default: airfoil_kp_g14_c3se
+    default: airfoil_kp_g14
 
   public_network:
     type: string
@@ -42,12 +42,12 @@ parameters:
   workers:
     type: string
     description: Number of celery worker nodes to be deployed.
-    default: 1
+    default: 2
 
   sec_group_name:
     type: string
     description: Assigned name for the security group.
-    default: airfoil_sg_g14
+    default: airfoil_asg_g14
 
 resources:
 
@@ -109,9 +109,9 @@ resources:
       cooldown: 60
       desired_capacity: { get_param: workers }
       min_size: 1
-      max_size: 7
+      max_size: 8
       resource:
-        type: OS::Nova::Server::Cons
+        type: OS::Nova::Server::Worker
         properties:
           image: { get_param: image }
           flavor: { get_param: flavor }
@@ -138,31 +138,19 @@ resources:
       cooldown: 60
       scaling_adjustment: -1
 
-  cpu_alarm_high:
-    type: OS::Ceilometer::Alarm
-    properties:
-      meter_name: cpu_util
-      statistic: avg
-      period: 60
-      evaluation_periods: 1
-      threshold: 80
-      alarm_actions:
-        - {get_attr: [scaleup_policy, alarm_url]}
-      comparison_operator: gt
-
-  cpu_alarm_low:
-    type: OS::Ceilometer::Alarm
-    properties:
-      meter_name: cpu_util
-      statistic: avg
-      period: 60
-      evaluation_periods: 1
-      threshold: 20
-      alarm_actions:
-        - {get_attr: [scaledown_policy, alarm_url]}
-      comparison_operator: lt
-
 outputs:
+  scale_up_url:
+    description: This URL is the webhook to scale up the autoscaling group.  You
+      can invoke the scale-up operation by doing an HTTP POST to this
+      URL; no body nor extra headers are needed.
+    value: {get_attr: [scaleup_policy, alarm_url]}
+
+  scale_down_url:
+    description: This URL is the webhook to scale down the autoscaling group.  You
+      can invoke the scale-up operation by doing an HTTP POST to this
+      URL; no body nor extra headers are needed.
+    value: {get_attr: [scaledown_policy, alarm_url]}
+
   instance_name:
     description: Name of the instance
     value: { get_attr: [airfoil_client_g14, name] }
