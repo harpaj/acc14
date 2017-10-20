@@ -27,7 +27,7 @@ def monitor_cluster_cpu(avg_demand, eval_counter):
     rabbit = (rabbit_list[2].split("\t"))
     cons = int(rabbit[1])
     queue_size = int(rabbit[2]) + cons
-    queued_demand = 1.0 - float(cons/queue_size)
+    queued_demand = (1.0 - float(cons/queue_size)) or 0
     avg_demand += queued_demand
     eval_counter += 1
 
