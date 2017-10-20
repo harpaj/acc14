@@ -8,7 +8,7 @@ This project was developed as final project for the course Applied Cloud Computi
 - app.py: Flask application file exposing the airfoil calculations to the end-user
 - cpu_monitor: File to run application demand evaluation
 
-## bin:
+### bin:
 This folder contains CloudNaca and Airfoil binary files.
 
 ### orchestration:
