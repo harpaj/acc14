@@ -3,6 +3,14 @@ This project was developed as final project for the course Applied Cloud Computi
 
 ## File structure:
 
+- celeryconfig.py: Celery configuration file
+- tasks.py: Celery tasks definition file
+- app.py: Flask application file exposing the airfoil calculations to the end-user
+- cpu_monitor: File to run application demand evaluation
+
+## bin:
+This folder contains CloudNaca and Airfoil binary files.
+
 ### orchestration:
 This folder contains the following YAML scripts for the application deployment using Heat orchestrator and Cloud-init contextualizer:
 - airfoil_asg_g14.yaml: Airfoil stack with auto-scaling group
